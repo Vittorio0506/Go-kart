@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campionato Kart Poly</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Campionato Kart Poly</h1>
+  </header>
+  <nav>
+    <button onclick="showSection('piloti')">Piloti</button>
+    <button onclick="showSection('ultima-gara')">Ultima Gara</button>
+    <button onclick="showSection('storico-gare')">Storico Gare</button>
+    <button onclick="showSection('classifica')">Classifica</button>
+    <button onclick="showSection('circuiti')">Circuiti</button>
+    <button onclick="showSection('regolamento')">Regolamento</button>
+  </nav>
+  <main>
+    <section id="piloti">
+      <h2>Piloti</h2>
+      <p>Elenco dei piloti partecipanti al campionato.</p>
+      <table style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+          <tr style="background:#000000;">
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">#</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Nome</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">Adamo Vittorio</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">Apuzzo Alessandro</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">De Angelis Matteo</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">4</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">Ilari Matteo</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">5</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">Moretti Vincenzo</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">6</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">Rossi Michele</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">7</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">Sprecacè Emanuele</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">8</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">Santarelli Francesco</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">9</td>
+            <td style="padding: 0.5rem; border: 1px solid #ccc;">Sacripanti Giorgio</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:2.5rem;">
+        <label for="select-pilota"><strong>Statistiche pilota:</strong></label>
+        <select id="select-pilota" onchange="mostraStatistichePilota()">
+          <option value="">Seleziona un pilota</option>
+          <option value="Adamo Vittorio">Adamo Vittorio</option>
+          <option value="Apuzzo Alessandro">Apuzzo Alessandro</option>
+          <option value="De Angelis Matteo">De Angelis Matteo</option>
+          <option value="Ilari Matteo">Ilari Matteo</option>
+          <option value="Moretti Vincenzo">Moretti Vincenzo</option>
+          <option value="Rossi Michele">Rossi Michele</option>
+          <option value="Sprecacè Emanuele">Sprecacè Emanuele</option>
+          <option value="Santarelli Francesco">Santarelli Francesco</option>
+          <option value="Sacripanti Giorgio">Sacripanti Giorgio</option>
+        </select>
+        <div id="statistiche-pilota" style="margin-top:1.5rem;"></div>
+      </div>
+      <script>
+        function mostraStatistichePilota() {
+          const nome = document.getElementById('select-pilota').value;
+          if (!nome) {
+            document.getElementById('statistiche-pilota').innerHTML = '';
+            return;
+          }
+          // Raccogli tutte le tabelle delle gare (storico + ultima gara)
+          const tabelle = Array.from(document.querySelectorAll('#storico-gare-tabelle table, #ultima-gara table'));
+          let gare = 0, giriTot = 0, puntiTot = 0;
+          let posizioni = [], podi = 0, vittorie = 0;
+          let miglioriGiriPista = {};
+          let pisteCorse = new Set();
+          tabelle.forEach(tab => {
+            // Trova la pista dal titolo precedente alla tabella
+            let pista = 'Dino Ferrari - Porto San Giorgio';
+            let el = tab;
+            while (el && el.previousElementSibling) {
+              el = el.previousElementSibling;
+              if (el.tagName && el.tagName.toLowerCase() === 'h3') {
+                // Cerca i nomi ufficiali delle piste
+                if (el.textContent.includes('Val Vibrata')) pista = 'Kartodromo Val Vibrata';
+                else if (el.textContent.includes('Dino Ferrari')) pista = 'Dino Ferrari - Porto San Giorgio';
+                else if (el.textContent.includes('KZR') || el.textContent.includes('Martinsicuro')) pista = 'KZR - Martinsicuro';
+                break;
+              }
+            }
+            Array.from(tab.tBodies[0].rows).forEach(row => {
+              const celle = row.cells;
+              if (celle[1] && celle[1].textContent.trim() === nome) {
+                gare++;
+                pisteCorse.add(pista);
+                // Posizione (colonna 0)
+                const pos = parseInt(celle[0]?.textContent.trim() || '0');
+                if (!isNaN(pos) && pos > 0) posizioni.push(pos);
+                if (pos === 1) vittorie++;
+                if (pos >= 1 && pos <= 3) podi++;
+                // Giri
+                const giri = parseInt(celle[2]?.textContent.trim() || '0');
+                giriTot += isNaN(giri) ? 0 : giri;
+                // Giro veloce
+                const giroVeloce = celle[4]?.textContent.trim();
+                if (giroVeloce && giroVeloce !== "-") {
+                  if (!miglioriGiriPista[pista] || confrontaTempiGiro(giroVeloce, miglioriGiriPista[pista]) < 0) {
+                    miglioriGiriPista[pista] = giroVeloce;
+                  }
+                }
+                // Punti
+                const punti = parseInt(celle[5]?.textContent.trim() || '0');
+                puntiTot += isNaN(punti) ? 0 : punti;
+              }
+            });
+          });
+          let mediaGiri = gare ? (giriTot / gare).toFixed(2) : '-';
+          let mediaPos = posizioni.length ? (posizioni.reduce((a,b)=>a+b,0)/posizioni.length).toFixed(2) : '-';
+          let html = `<div style='background:#f7f7f7; border-radius:10px; padding:1.2rem 1rem; box-shadow:0 2px 8px #0001; max-width:400px;'>`;
+          html += `<h3 style='margin-top:0;'>${nome}</h3>`;
+          html += `<ul style='list-style:none; padding:0;'>`;
+          html += `<li><b>Gare disputate:</b> ${gare}</li>`;
+          html += `<li><b>Giri totali:</b> ${giriTot}</li>`;
+          html += `<li><b>Media giri/gara:</b> ${mediaGiri}</li>`;
+          html += `<li><b>Punti totali:</b> ${puntiTot}</li>`;
+          html += `<li><b>Posizione media:</b> ${mediaPos}</li>`;
+          html += `<li><b>Numero podi (Top 3):</b> ${podi}</li>`;
+          html += `<li><b>Numero vittorie:</b> ${vittorie}</li>`;
+          if (pisteCorse.size > 0) {
+            html += `<li><b>Miglior giro per pista:</b><ul style='margin:0.3em 0 0 1.2em; padding:0;'>`;
+            Array.from(pisteCorse).forEach(pista => {
+              html += `<li><b>${pista}:</b> ${miglioriGiriPista[pista] ? miglioriGiriPista[pista] : '-'}</li>`;
+            });
+            html += `</ul></li>`;
+          }
+          html += `</ul></div>`;
+          document.getElementById('statistiche-pilota').innerHTML = html;
+        }
+        // Confronta due tempi giro (es: 1.03.168 < 1.04.000)
+        function confrontaTempiGiro(a, b) {
+          // Supporta sia formato mm.ss.mmm che ss.mmm
+          function parse(t) {
+            const parts = t.split('.').map(Number);
+            if (parts.length === 3) return parts[0]*60*1000 + parts[1]*1000 + parts[2];
+            if (parts.length === 2) return parts[0]*1000 + parts[1];
+            return 9999999;
+          }
+          return parse(a) - parse(b);
+        }
+      </script>
+    </section>
+    <section id="ultima-gara">
+      <h2>Ultima Gara</h2>
+      <p><strong>Pista:</strong> Dino Ferrari - Porto San Giorgio<br>
+         <strong>Giorno:</strong> 4/7/2025</p>
+      <table style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+          <tr style="background:#000000;">
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Posizione</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Nome</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Giri</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Distacco</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Giro Veloce</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Punti</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Sprecacè Emanuele</td><td style="padding: 0.5rem; border: 1px solid #ccc;">15</td><td style="padding: 0.5rem; border: 1px solid #ccc;">13:11.214</td><td style="padding: 0.5rem; border: 1px solid #ccc;">52.349</td><td style="padding: 0.5rem; border: 1px solid #ccc;">16</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Rossi Michele</td><td style="padding: 0.5rem; border: 1px solid #ccc;">15</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 08.238</td><td style="padding: 0.5rem; border: 1px solid #ccc;">53.179</td><td style="padding: 0.5rem; border: 1px solid #ccc;">12</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Apuzzo Alessandro</td><td style="padding: 0.5rem; border: 1px solid #ccc;">15</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 17.832</td><td style="padding: 0.5rem; border: 1px solid #ccc;">53.886</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">4</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Moretti Vincenzo</td><td style="padding: 0.5rem; border: 1px solid #ccc;">15</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 22.455</td><td style="padding: 0.5rem; border: 1px solid #ccc;">54.064</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">5</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Sacripanti Giorgio</td><td style="padding: 0.5rem; border: 1px solid #ccc;">15</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 40.139</td><td style="padding: 0.5rem; border: 1px solid #ccc;">55.194</td><td style="padding: 0.5rem; border: 1px solid #ccc;">6</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">6</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Adamo Vittorio</td><td style="padding: 0.5rem; border: 1px solid #ccc;">15</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 49.623</td><td style="padding: 0.5rem; border: 1px solid #ccc;">54.107</td><td style="padding: 0.5rem; border: 1px solid #ccc;">4</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">7</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Ilari Matteo</td><td style="padding: 0.5rem; border: 1px solid #ccc;">14</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 1 Giro</td><td style="padding: 0.5rem; border: 1px solid #ccc;">56.780</td><td style="padding: 0.5rem; border: 1px solid #ccc;">2</td></tr>
+        </tbody>
+      </table>
+      <!-- Qui puoi aggiungere i risultati dell'ultima gara -->
+    </section>
+    <section id="storico-gare">
+      <h2>Storico Gare</h2>
+      <p>Archivio delle gare precedenti con risultati e dettagli.</p>
+      <div style="margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center;">
+        <label for="filtro-data"><strong>Data:</strong></label>
+        <select id="filtro-data" onchange="filtraGare()">
+          <option value="tutte">Tutte</option>
+          <option value="29/7/2023">29/7/2023</option>
+          <option value="x/x/2024">x/x/2024</option>
+        </select>
+        <label for="filtro-pista"><strong>Pista:</strong></label>
+        <select id="filtro-pista" onchange="filtraGare()">
+          <option value="tutte">Tutte</option>
+          <option value="Val Vibrata">Val Vibrata</option>
+        </select>
+      </div>
+      <div id="storico-gare-tabelle">
+        <div class="gara-storico" data-data="29/7/2023" data-pista="Val Vibrata">
+          <h3>Gara 1 - 29/7/2023 - Kartodromo Val Vibrata</h3>
+          <table style="width:100%; border-collapse: collapse; margin-bottom: 2rem;">
+            <thead>
+              <tr style="background:#000000;">
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Posizione</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Nome</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Giri</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Distacco</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Giro Veloce</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Punti</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td><td style="padding: 0.5rem; border: 1px solid #ccc;">De Angelis Matteo</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;">-</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.03.168</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Moretti Vincenzo</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 1.417</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.02.973</td><td style="padding: 0.5rem; border: 1px solid #ccc;">7</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Adamo Vittorio</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 12.246</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.04.193</td><td style="padding: 0.5rem; border: 1px solid #ccc;">5</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">4</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Sacripanti Giorgio</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 37.552</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.08.215</td><td style="padding: 0.5rem; border: 1px solid #ccc;">4</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">5</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Santarelli Francesco</td><td style="padding: 0.5rem; border: 1px solid #ccc;">7</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 1 Giro</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.06.842</td><td style="padding: 0.5rem; border: 1px solid #ccc;">3</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="gara-storico" data-data="29/7/2023" data-pista="Val Vibrata">
+          <h3>Gara 2 - 29/7/2023 - Kartodromo Val Vibrata</h3>
+          <table style="width:100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background:#000000;">
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Posizione</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Nome</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Giri</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Distacco</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Giro Veloce</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Punti</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td><td style="padding: 0.5rem; border: 1px solid #ccc;">De Angelis Matteo</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc;">-</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.02.445</td><td style="padding: 0.5rem; border: 1px solid #ccc;">15</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Moretti Vincenzo</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 0.481</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.02.413</td><td style="padding: 0.5rem; border: 1px solid #ccc;">13</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Adamo Vittorio</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 11.742</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.03.913</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">4</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Santarelli Francesco</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 52.469</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.05.724</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">5</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Sacripanti Giorgio</td><td style="padding: 0.5rem; border: 1px solid #ccc;">9</td><td style="padding: 0.5rem; border: 1px solid #ccc;">+ 1 Giro</td><td style="padding: 0.5rem; border: 1px solid #ccc;">1.07.327</td><td style="padding: 0.5rem; border: 1px solid #ccc;">6</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="gara-storico" data-data="x/x/2024" data-pista="Val Vibrata">
+          <h3>Gara 1 - x/x/2024 - Kartodromo Val Vibrata</h3>
+          <table style="width:100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background:#000000;">
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Posizione</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Nome</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Giri</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Distacco</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Giro Veloce</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Punti</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Moretti Vincenzo</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;">-</td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;">9</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Sprecacè Emanuele</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;">6</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Adamo Vittorio</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;">5</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">4</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Rossi Michele</td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;">4</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="gara-storico" data-data="x/x/2024" data-pista="Val Vibrata">
+          <h3>Gara 2 - x/x/2024 - Kartodromo Val Vibrata</h3>
+          <table style="width:100%; border-collapse: collapse; margin-bottom: 2rem;">
+            <thead>
+              <tr style="background:#000000;">
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Posizione</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Nome</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Giri</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Distacco</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Giro Veloce</th>
+                <th style="padding: 0.5rem; border: 1px solid #ccc;">Punti</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Rossi Michele</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;">15</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Moretti Vincenzo</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;">13</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Adamo Vittorio</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td></tr>
+              <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">4</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Sprecacè Emanuele</td><td style="padding: 0.5rem; border: 1px solid #ccc;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;"></td><td style="padding: 0.5rem; border: 1px solid #ccc;">8</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <script>
+        function filtraGare() {
+          const data = document.getElementById('filtro-data').value;
+          const pista = document.getElementById('filtro-pista').value;
+          document.querySelectorAll('.gara-storico').forEach(div => {
+            const matchData = (data === 'tutte' || div.getAttribute('data-data') === data);
+            const matchPista = (pista === 'tutte' || div.getAttribute('data-pista') === pista);
+            div.style.display = (matchData && matchPista) ? '' : 'none';
+          });
+        }
+      </script>
+    </section>
+    <section id="classifica">
+      <h2>Classifica</h2>
+      <p>Classifica aggiornata del campionato.</p>
+      <table style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+          <tr style="background:#000000;">
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Posizione</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Nome</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Punti</th>
+            <th style="padding: 0.5rem; border: 1px solid #ccc;">Gare Disputate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Moretti Vincenzo</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">50</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">5</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Adamo Vittorio</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">34</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">5</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Rossi Michele</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">31</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">4</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Sprecacè Emanuele</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">30</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">5</td><td style="padding: 0.5rem; border: 1px solid #ccc;">De Angelis Matteo</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">23</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">6</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Sacripanti Giorgio</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">16</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">3</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">7</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Apuzzo Alessandro</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">10</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">8</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Santarelli Francesco</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">11</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td></tr>
+          <tr><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">9</td><td style="padding: 0.5rem; border: 1px solid #ccc;">Ilari Matteo</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">2</td><td style="padding: 0.5rem; border: 1px solid #ccc; text-align:center;">1</td></tr>
+        </tbody>
+      </table>
+      <!-- Qui puoi aggiungere la classifica generale -->
+    </section>
+    <section id="circuiti">
+      <h2>Circuiti</h2>
+      <p>Informazioni sui circuiti dove si svolgono le gare.</p>
+      <ul style="font-size:1.1rem; line-height:1.7;">
+        <li>
+          <strong>1 - <a href="https://www.kart-ferrari.it/kartodromo-la-pista.aspx" target="_blank" rel="noopener noreferrer">Kartodromo Dino Ferrari - Porto San Giorgio</a></strong>
+        </li>
+        <li>
+          <strong>2 - <a href="https://www.kzrkart.it/" target="_blank" rel="noopener noreferrer">KZR - Martinsicuro</a></strong>
+        </li>
+        <li>
+          <strong>3 - <a href="https://kartodromovalvibrata.it/" target="_blank" rel="noopener noreferrer">Kartodromo Val Vibrata</a></strong>
+        </li>
+      </ul>
+      <!-- Qui puoi aggiungere una lista o mappa dei circuiti -->
+    </section>
+    <section id="regolamento">
+      <h2>Regolamento</h2>
+      <p><strong>Sistema di Punteggio Campionato Kart</strong></p>
+      <p>
+        <u>Se si disputa una sola gara:</u><br>
+        <ul>
+          <li>1° classificato: 15 punti</li>
+          <li>2° classificato: 12 punti</li>
+          <li>3° classificato: 10 punti</li>
+          <li>4° classificato: 8 punti</li>
+          <li>5° classificato: 6 punti</li>
+          <li>6° classificato: 4 punti</li>
+          <li>7° classificato: 2 punti</li>
+          <li>8° classificato: 1 punto</li>
+        </ul>
+        Al pilota che realizza il giro veloce viene attribuito 1 punto aggiuntivo.<br><br>
+        <u>Se si disputano Gara 1 e Gara 2:</u><br>
+
+        <b>Gara 1</b>
+        <ul>
+          <li>1° classificato: 8 punti</li>
+          <li>2° classificato: 6 punti</li>
+          <li>3° classificato: 5 punti</li>
+          <li>4° classificato: 4 punti</li>
+          <li>5° classificato: 3 punti</li>
+          <li>6° classificato: 2 punti</li>
+          <li>7° classificato: 1 punto</li>
+        </ul>
+        Anche in questo caso, al pilota che realizza il giro veloce viene attribuito 1 punto aggiuntivo.<br>
+        
+        Il sistema di punteggio per Gara 2 è uguale a quello se ci fosse solo 1 gara.
+      </p>
+      <!-- Qui puoi inserire il regolamento -->
+    </section>
+  </main>
+  <script>
+    function showSection(sectionId) {
+      document.querySelectorAll('main section').forEach(sec => {
+        sec.classList.remove('active');
+      });
+      document.getElementById(sectionId).classList.add('active');
+    }
+    // Mostra la sezione Piloti all'avvio
+    showSection('piloti');
+  </script>
+</body>
+</html> 
